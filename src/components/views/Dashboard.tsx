@@ -84,7 +84,7 @@ const Dashboard = () => {
               </Box>
 
               {vaultsLoading ? (
-                <Skeleton width={mobile ? 300 : undefined} count={1} height={40} />
+                <Skeleton props={ { width: mobile ? 300 : undefined,  count: 1, height:40 }} />
               ) : (
                 <DashboardPositionList
                   actionType={ActionType.BORROW}
@@ -112,7 +112,7 @@ const Dashboard = () => {
               </Box>
 
               {seriesLoading ? (
-                <Skeleton width={mobile ? 300 : undefined} count={1} height={40} />
+                <Skeleton props={ { width: mobile ? 300 : undefined,  count: 1, height:40 }}/>
               ) : (
                 <DashboardPositionList
                   actionType={ActionType.LEND}
@@ -140,7 +140,7 @@ const Dashboard = () => {
               </Box>
 
               {strategiesLoading ? (
-                <Skeleton width={mobile ? 300 : undefined} count={1} height={40} />
+                <Skeleton props={ { width: mobile ? 300 : undefined,  count: 1, height:40 }}/>
               ) : (
                 <DashboardPositionList
                   actionType={ActionType.POOL}

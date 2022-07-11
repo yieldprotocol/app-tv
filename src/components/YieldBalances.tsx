@@ -18,10 +18,10 @@ const StyledText = styled(Text)`
 const Balance = ({ image, balance, loading }: { image: any; balance: string; loading: boolean }) => (
   <Box direction="row" gap="small" align="center">
     <StyledText size="small" color="text">
-      {loading ? <Skeleton circle height={20} width={20} /> : <Logo image={image} height="20px" width="20px" />}
+      {loading ? <Skeleton props={{ width: 20, circle: true, height: 20 }} /> : <Logo image={image} height="20px" width="20px" />}
     </StyledText>
     <StyledText size="small" color="text">
-      {loading && <Skeleton width={40} />}
+      {loading && <Skeleton props={{ width: 40 }}/>}
       {!loading && balance}
     </StyledText>
   </Box>

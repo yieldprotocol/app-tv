@@ -56,7 +56,7 @@ function LendItem({
                 </Text>
                 <Text weight={450} size="xsmall">
                   {seriesLoading && isSelectedBaseAndSeries ? (
-                    <SkeletonWrap width={30} />
+                    <SkeletonWrap props={{ width:30}} />
                   ) : (
                     cleanValue(fyTokenMarketValue, seriesBase?.digitFormat!)
                   )}

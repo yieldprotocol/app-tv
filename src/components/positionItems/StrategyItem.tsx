@@ -41,7 +41,7 @@ function StrategyItem({ strategy, index, condensed }: { strategy: IStrategy; ind
             <Text weight={900} size="small">
               {formatStrategyName(strategy.name)}
             </Text>
-            <Text size="xsmall"> Rolling: {strategy.currentSeries?.fullDate} </Text>
+            <Text size="xsmall"> <>Rolling: {strategy.currentSeries?.fullDate}</>  </Text>
           </Box>
 
           <Box justify="center">
@@ -52,7 +52,7 @@ function StrategyItem({ strategy, index, condensed }: { strategy: IStrategy; ind
               <Text weight={450} size="xsmall">
                 {/* Tokens:  {cleanValue(series.poolTokens_, 2)} */}
                 {strategiesLoading && isSelectedStrategy ? (
-                  <SkeletonWrap width={30} />
+                  <SkeletonWrap props={{ width:30}} />
                 ) : (
                   nFormatter(parseFloat(strategy.accountBalance_!), 2)
                 )}

@@ -48,9 +48,9 @@ export const CardSkeleton = (props: { rightSide?: boolean }) => (
     round={{ corner: props.rightSide ? 'right' : 'left', size: 'large' }}
   >
     <Box pad="small" width="small" direction="row" align="center" gap="small">
-      <Skeleton circle width={45} height={45} />
+      <Skeleton props={{ width:45, height:45, circle:true }} />
       <Box>
-        <Skeleton count={2} width={100} />
+        <Skeleton props={{ width:100,count:2 }} />
       </Box>
     </Box>
   </StyledBox>
@@ -152,7 +152,7 @@ function SeriesSelector({ selectSeriesLocally, inputValue, actionType, cardLayou
 
   const optionExtended = (_series: ISeries | undefined) => (
     <Box fill="horizontal" direction="row" justify="between" gap="small" align="center">
-      <Box align="center">{_series?.seriesMark}</Box>
+      <Box align="center"><>{_series?.seriesMark}</></Box>
       {optionText(_series)}
       {_series?.seriesIsMature && (
         <Box round="large" border pad={{ horizontal: 'small' }}>
@@ -210,7 +210,7 @@ function SeriesSelector({ selectSeriesLocally, inputValue, actionType, cardLayou
 
   return (
     <>
-      {seriesLoading && <Skeleton width={180} />}
+      {seriesLoading && <Skeleton props={{ width:180}}/>}
       {!cardLayout && (
         <InsetBox background={mobile ? 'hoverBackground' : undefined}>
           <Select
@@ -291,7 +291,7 @@ function SeriesSelector({ selectSeriesLocally, inputValue, actionType, cardLayou
                           : undefined,
                     }}
                   >
-                    {series.seriesMark}
+                    <>{series.seriesMark}</>
                   </Avatar>
 
                   <Box>

@@ -53,7 +53,7 @@ function AssetSelector({ selectCollateral, isModal }: IAssetSelectorProps) {
         </Text>
       </Box>
     ) : (
-      <Skeleton width={50} />
+      <Skeleton props={{ width:50}} />
     );
 
   const handleSelect = (asset: IAsset) => {

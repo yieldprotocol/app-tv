@@ -35,7 +35,7 @@ const DashboardBalanceSummary = ({ debt, collateral, lendBalance, poolBalance, d
         <Box direction="row-responsive" justify="between">
           <Text size="small">Total Lent:</Text>
           {seriesLoading ? (
-            <Skeleton width={50} />
+            <Skeleton props={{width:50}} />
           ) : (
             <Box direction="row" gap="medium">
               <Text size="small">
@@ -50,7 +50,7 @@ const DashboardBalanceSummary = ({ debt, collateral, lendBalance, poolBalance, d
         <Box direction="row-responsive" justify="between">
           <Text size="small">Total Pooled:</Text>
           {strategiesLoading ? (
-            <Skeleton width={50} />
+            <Skeleton props={{width:50}} />
           ) : (
             <Box direction="row" gap="medium">
               <Text size="small">
@@ -65,7 +65,7 @@ const DashboardBalanceSummary = ({ debt, collateral, lendBalance, poolBalance, d
         <Box direction="row-responsive" justify="between">
           <Text size="small">Total Collateral:</Text>
           {vaultsLoading ? (
-            <Skeleton width={50} />
+            <Skeleton props={{width:50}} />
           ) : (
             <Box direction="row" gap="medium">
               <Text size="small">
@@ -80,7 +80,7 @@ const DashboardBalanceSummary = ({ debt, collateral, lendBalance, poolBalance, d
         <Box direction="row-responsive" justify="between">
           <Text size="small">Total Debt:</Text>
           {vaultsLoading ? (
-            <Skeleton width={50} />
+            <Skeleton props={{width:50}}/>
           ) : (
             <Box direction="row" gap="medium">
               <Text size="small">
@@ -96,7 +96,7 @@ const DashboardBalanceSummary = ({ debt, collateral, lendBalance, poolBalance, d
       <Box direction="row-responsive" justify="between" margin={{ top: 'medium' }} border={{ side: 'top' }}>
         <Text size="medium">Total:</Text>
         {vaultsLoading || seriesLoading || strategiesLoading || !totalBalance ? (
-          <Skeleton width={50} />
+          <Skeleton props={{width:50}} />
         ) : (
           <Box direction="row" gap="medium">
             <Text size="medium">

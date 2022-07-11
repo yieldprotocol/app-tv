@@ -51,7 +51,7 @@ function VaultItem({ vault, index, condensed }: { vault: IVault; index: number; 
                   Debt:
                 </Text>
                 <Text weight={450} size="xsmall">
-                  {vaultsLoading && vault.id === selectedVault?.id ? <SkeletonWrap width={30} /> : vault.accruedArt_}
+                  {vaultsLoading && vault.id === selectedVault?.id ? <SkeletonWrap props={{ width:30}} /> : vault.accruedArt_}
                 </Text>
               </Box>
             </Box>

@@ -31,10 +31,10 @@ const StyledBox = styled(Box)`
 const CardSkeleton = () => (
   <StyledBox round="large" elevation="xsmall" align="center">
     <Box pad="small" width="small" direction="row" gap="small" fill>
-      <Skeleton circle width={45} height={45} />
+      <Skeleton props={{ width:45, height:45, circle:true }}/>
       <Box>
-        <Skeleton width={250} />
-        <Skeleton width={150} />
+        <Skeleton props={{width:250}} />
+        <Skeleton props={{width:250}} />
       </Box>
     </Box>
   </StyledBox>
@@ -108,7 +108,7 @@ function StrategySelector({ inputValue, cardLayout, setOpen, open = false }: ISt
     <>
       {cardLayout && (
         <Box gap="small">
-          {strategiesLoading && <Skeleton width={180} />}
+          {strategiesLoading && <Skeleton props={{width:250}} />}
 
           {strategiesLoading ? (
             <CardSkeleton />
@@ -126,7 +126,7 @@ function StrategySelector({ inputValue, cardLayout, setOpen, open = false }: ISt
                     boxShadow: `inset 1px 1px 2px ${selectedStrategy?.currentSeries?.endColor.toString().concat('69')}`,
                   }}
                 >
-                  {selectedStrategy?.currentSeries?.seriesMark || <FiSlash />}
+                  <>{selectedStrategy?.currentSeries?.seriesMark || <FiSlash />}</>
                 </Avatar>
                 <Box>
                   {(!selectedStrategy || !inputValue) && (
@@ -204,7 +204,7 @@ function StrategySelector({ inputValue, cardLayout, setOpen, open = false }: ISt
                                     .concat('69')}`,
                                 }}
                               >
-                                {strategy.currentSeries?.seriesMark || <FiSlash />}
+                                <>{strategy.currentSeries?.seriesMark || <FiSlash />}</>
                               </Avatar>
                               <Box>
                                 <Text size="small" color={strategy.currentSeries?.textColor}>
