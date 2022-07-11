@@ -46,6 +46,7 @@ const initState: IChainContextState = {
     account: null as string | null,
 
     connectionName: null as string | null,
+    useTenderlyFork: false as boolean,
   },
 
   /* flags */
@@ -115,7 +116,7 @@ const ChainProvider = ({ children }: any) => {
 
   /* Connection hook */
   const { connectionState, connectionActions } = useConnection();
-  const { chainId, fallbackProvider, fallbackChainId } = connectionState;
+  const { chainId, fallbackProvider, fallbackChainId, useTenderlyFork } = connectionState;
 
   /**
    * Update on FALLBACK connection/state on network changes (id/library)
@@ -165,10 +166,7 @@ const ChainProvider = ({ children }: any) => {
           ConvexLadleModule = contracts.ConvexLadleModule__factory.connect(addrs.ConvexLadleModule, fallbackProvider);
 
           // Oracles
-          AccumulatorMultiOracle = contracts.AccumulatorOracle__factory.connect(
-            addrs.AccumulatorMultiOracle,
-            fallbackProvider
-          );
+          AccumulatorMultiOracle = contracts.AccumulatorOracle__factory.connect(addrs.AccumulatorMultiOracle, fallbackProvider);
           // RateOracle = contracts.CompoundMultiOracle__factory.connect(addrs.CompoundMultiOracle, fallbackProvider);
           RateOracle = AccumulatorMultiOracle;
 
@@ -206,10 +204,7 @@ const ChainProvider = ({ children }: any) => {
           WrapEtherModule = contracts.WrapEtherModule__factory.connect(addrs.WrapEtherModule, fallbackProvider);
 
           // Oracles
-          AccumulatorMultiOracle = contracts.AccumulatorOracle__factory.connect(
-            addrs.AccumulatorMultiOracle,
-            fallbackProvider
-          );
+          AccumulatorMultiOracle = contracts.AccumulatorOracle__factory.connect(addrs.AccumulatorMultiOracle, fallbackProvider);
           RateOracle = AccumulatorMultiOracle;
           ChainlinkUSDOracle = contracts.ChainlinkUSDOracle__factory.connect(
             addrs.ChainlinkUSDOracle,
@@ -307,10 +302,18 @@ const ChainProvider = ({ children }: any) => {
       const _getAssets = async () => {
         /* get all the assetAdded, oracleAdded and joinAdded events and series events at the same time */
         const blockNum = await fallbackProvider.getBlockNumber();
-        const [assetAddedEvents, joinAddedEvents] = await Promise.all([
-          Cauldron.queryFilter('AssetAdded' as ethers.EventFilter, lastAssetUpdate, blockNum),
-          Ladle.queryFilter('JoinAdded' as ethers.EventFilter, lastAssetUpdate, blockNum),
-        ]);
+
+        let assetAddedEvents = [];
+        let joinAddedEvents = [];
+
+        try {
+          [assetAddedEvents, joinAddedEvents] = await Promise.all([
+            Cauldron.queryFilter('AssetAdded' as ethers.EventFilter),
+            Ladle.queryFilter('JoinAdded' as ethers.EventFilter),
+          ]);
+        } catch (e) {
+          console.log('🦄 ~ file: ChainContext.tsx ~ line 295 ~ const_getAssets= ~ e', e);
+        }
 
         /* Create a map from the joinAdded event data or hardcoded join data if available */
         const joinMap = new Map(joinAddedEvents.map((e: JoinAddedEvent) => e.args)); // event values);
@@ -446,10 +449,16 @@ const ChainProvider = ({ children }: any) => {
 
       const _getSeries = async () => {
         /* get poolAdded events and series events at the same time */
-        const [seriesAddedEvents, poolAddedEvents] = await Promise.all([
-          Cauldron.queryFilter('SeriesAdded' as ethers.EventFilter, lastSeriesUpdate),
-          Ladle.queryFilter('PoolAdded' as ethers.EventFilter, lastSeriesUpdate),
-        ]);
+        let seriesAddedEvents = [];
+        let poolAddedEvents = [];
+        try {
+          [seriesAddedEvents, poolAddedEvents] = await Promise.all([
+            Cauldron.queryFilter('SeriesAdded' as ethers.EventFilter, useTenderlyFork ? null : lastSeriesUpdate),
+            Ladle.queryFilter('PoolAdded' as ethers.EventFilter, useTenderlyFork ? null : lastSeriesUpdate),
+          ]);
+        } catch (error) {
+          console.log('🦄 ~ file: ChainContext.tsx ~ line 451 ~ const_getSeries= ~ error', error);
+        }
 
         /* Create a map from the poolAdded event data or hardcoded pool data if available */
         const poolMap = new Map(poolAddedEvents.map((e: PoolAddedEvent) => e.args)); // event values);
@@ -460,57 +469,53 @@ const ChainProvider = ({ children }: any) => {
         const newSeriesList: any[] = [];
 
         /* Add in any extra static series */
-        try {
-          await Promise.all(
-            seriesAdded.map(async (x): Promise<void> => {
-              const { seriesId: id, baseId, fyToken } = x;
-              const { maturity } = await Cauldron.series(id);
+        await Promise.all(
+          seriesAdded.map(async (x): Promise<void> => {
+            const { seriesId: id, baseId, fyToken } = x;
+            const { maturity } = await Cauldron.series(id);
 
-              if (poolMap.has(id)) {
-                // only add series if it has a pool
-                const poolAddress = poolMap.get(id);
-                const poolContract = contracts.Pool__factory.connect(poolAddress, fallbackProvider);
-                const fyTokenContract = contracts.FYToken__factory.connect(fyToken, fallbackProvider);
-                const [name, symbol, version, decimals, poolName, poolVersion, poolSymbol, ts, g1, g2] =
-                  await Promise.all([
-                    fyTokenContract.name(),
-                    fyTokenContract.symbol(),
-                    fyTokenContract.version(),
-                    fyTokenContract.decimals(),
-                    poolContract.name(),
-                    poolContract.version(),
-                    poolContract.symbol(),
-                    poolContract.ts(),
-                    poolContract.g1(),
-                    poolContract.g2(),
-                    // poolContract.decimals(),
-                  ]);
-                const newSeries = {
-                  id,
-                  baseId,
-                  maturity,
-                  name,
-                  symbol,
-                  version,
-                  address: fyToken,
-                  fyTokenAddress: fyToken,
-                  decimals,
-                  poolAddress,
-                  poolVersion,
-                  poolName,
-                  poolSymbol,
-                  ts,
-                  g1,
-                  g2,
-                };
-                updateState({ type: ChainState.ADD_SERIES, payload: _chargeSeries(newSeries) });
-                newSeriesList.push(newSeries);
-              }
-            })
-          );
-        } catch (e) {
-          console.log('Error fetching series data: ', e);
-        }
+            if (poolMap.has(id)) {
+              // only add series if it has a pool
+              const poolAddress = poolMap.get(id);
+              const poolContract = contracts.Pool__factory.connect(poolAddress, fallbackProvider);
+              const fyTokenContract = contracts.FYToken__factory.connect(fyToken, fallbackProvider);
+              const [name, symbol, version, decimals, poolName, poolVersion, poolSymbol, ts, g1, g2] =
+                await Promise.all([
+                  fyTokenContract.name(),
+                  fyTokenContract.symbol(),
+                  fyTokenContract.version(),
+                  fyTokenContract.decimals(),
+                  poolContract.name(),
+                  poolContract.version(),
+                  poolContract.symbol(),
+                  poolContract.ts(),
+                  poolContract.g1(),
+                  poolContract.g2(),
+                ]);
+
+              const newSeries = {
+                id,
+                baseId,
+                maturity,
+                name,
+                symbol,
+                version,
+                address: fyToken,
+                fyTokenAddress: fyToken,
+                decimals,
+                poolAddress,
+                poolVersion,
+                poolName,
+                poolSymbol,
+                ts,
+                g1,
+                g2,
+              };
+              updateState({ type: ChainState.ADD_SERIES, payload: _chargeSeries(newSeries) });
+              newSeriesList.push(newSeries);
+            }
+          })
+        );
         setLastSeriesUpdate(await fallbackProvider?.getBlockNumber());
         setCachedSeries([...cachedSeries, ...newSeriesList]);
 
@@ -530,40 +535,36 @@ const ChainProvider = ({ children }: any) => {
       /* Iterate through the strategies list and update accordingly */
       const _getStrategies = async () => {
         const newStrategyList: any[] = [];
-        try {
-          await Promise.all(
-            strategyAddresses.map(async (strategyAddr) => {
-              /* if the strategy is NOT already in the cache : */
-              if (cachedStrategies.findIndex((_s: any) => _s.address === strategyAddr) === -1) {
-                console.log('updating constract ', strategyAddr);
+        await Promise.all(
+          strategyAddresses.map(async (strategyAddr) => {
+            /* if the strategy is NOT already in the cache : */
+            if (cachedStrategies.findIndex((_s: any) => _s.address === strategyAddr) === -1) {
+              console.log('updating constracrt ', strategyAddr);
 
-                const Strategy = contracts.Strategy__factory.connect(strategyAddr, fallbackProvider);
-                const [name, symbol, baseId, decimals, version] = await Promise.all([
-                  Strategy.name(),
-                  Strategy.symbol(),
-                  Strategy.baseId(),
-                  Strategy.decimals(),
-                  Strategy.version(),
-                ]);
+              const Strategy = contracts.Strategy__factory.connect(strategyAddr, fallbackProvider);
 
-                const newStrategy = {
-                  id: strategyAddr,
-                  address: strategyAddr,
-                  symbol,
-                  name,
-                  version,
-                  baseId,
-                  decimals,
-                };
-                // update state and cache
-                updateState({ type: ChainState.ADD_STRATEGY, payload: _chargeStrategy(newStrategy) });
-                newStrategyList.push(newStrategy);
-              }
-            })
-          );
-        } catch (e) {
-          console.log('Error fetching strategies', e);
-        }
+              const [name, symbol, baseId, decimals, version] = await Promise.all([
+                Strategy.name(),
+                Strategy.symbol(),
+                Strategy.baseId(),
+                Strategy.decimals(),
+                Strategy.version(),
+              ]);
+              const newStrategy = {
+                id: strategyAddr,
+                address: strategyAddr,
+                symbol,
+                name,
+                version,
+                baseId,
+                decimals,
+              };
+              // update state and cache
+              updateState({ type: ChainState.ADD_STRATEGY, payload: _chargeStrategy(newStrategy) });
+              newStrategyList.push(newStrategy);
+            }
+          })
+        );
 
         const _filteredCachedStrategies = cachedStrategies.filter((s: any) => strategyAddresses.includes(s.address));
 
@@ -645,13 +646,14 @@ const ChainProvider = ({ children }: any) => {
     connectionState.active,
     connectionState.connectionName,
     connectionState.currentChainInfo,
+    connectionState.useTenderlyFork,
   ]);
 
   const exportContractAddresses = () => {
     const contractList = [...(chainState.contractMap as any)].map(([v, k]) => [v, k?.address]);
     const seriesList = [...(chainState.seriesRootMap as any)].map(([v, k]) => [v, k?.address]);
     const assetList = [...(chainState.assetRootMap as any)].map(([v, k]) => [v, k?.address]);
-    const strategyList = [...(chainState.strategyRootMap as any)].map(([v, k]) => [k?.symbol, v]);
+    const strategyList = [...(chainState.strategyRootMap as any)].map(([v, k]) => [k?.symbol, v ]);
     const joinList = [...(chainState.assetRootMap as any)].map(([v, k]) => [v, k?.joinAddress]);
 
     const res = JSON.stringify({
@@ -662,8 +664,8 @@ const ChainProvider = ({ children }: any) => {
       joins: joinList,
     });
 
-    var dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(res);
-    var downloadAnchorNode = document.createElement('a');
+    const dataStr = `data:text/json;charset=utf-8,${encodeURIComponent(res)}`;
+    const downloadAnchorNode = document.createElement('a');
     downloadAnchorNode.setAttribute('href', dataStr);
     downloadAnchorNode.setAttribute('download', 'contracts' + '.json');
     document.body.appendChild(downloadAnchorNode); // required for firefox

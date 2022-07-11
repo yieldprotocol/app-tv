@@ -50,7 +50,6 @@ import { useAssetPair } from '../../hooks/useAssetPair';
 import Logo from '../logos/Logo';
 
 
-
 const VaultPosition = () => {
   const mobile: boolean = useContext<any>(ResponsiveContext) === 'small';
   const prevLoc = useCachedState('lastVisit', '')[0].slice(1).split('/')[0];
@@ -349,7 +348,7 @@ const VaultPosition = () => {
 
                       <InfoBite
                         label="Vault debt + interest"
-                        value={`${ cleanValue( ethers.utils.formatUnits( _selectedVault?.accruedArt, _selectedVault?.decimals ), 10 )  } ${
+                        value={`${cleanValue(_selectedVault?.accruedArt_, vaultBase?.digitFormat!)} ${
                           vaultBase?.displaySymbol
                         }${vaultSeries?.seriesIsMature ? ` (variable rate: ${_selectedVault.rate_}%)` : ''}`}
                         icon={<FiTrendingUp />}
